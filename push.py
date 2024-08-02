@@ -5,7 +5,7 @@ import subprocess
 import uuid
 
 out = "/root/code/homepage/out/*"
-blacklist = ["./CNAME", "./.git", "./push.py", "./json.html", "./gomi.html"]
+blacklist = ["./CNAME", "./.git", "./push.py", "./json.html", "./nojekyll"]
 
 for file in glob.glob("./*"):
     if file in blacklist:

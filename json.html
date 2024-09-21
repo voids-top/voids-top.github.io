@@ -98,17 +98,17 @@
 
         function formatPath(_path) {
             let path = _path.split('.');
-            path = path.slice(0);
-            path = path.map(segment => segment.replace(
-            	/(.+)\[(\d+)]/, 
-            	(_, a, b) => `['${a}'][${b}]`
-            ))
-            path = path.map(segment => segment.replace(
-            	/^([^\[].+[^\]]$)/, 
-            	(_, a) => `['${a}']`
-            ))
+            //path = path.slice(0);
+            //path = path.map(segment => segment.replace(
+            //	/(.+)\[(\d+)]/, 
+            //	(_, a, b) => `['${a}'][${b}]`
+            //))
+            //path = path.map(segment => segment.replace(
+            //	/^([^\[].+[^\]]$)/, 
+            //	(_, a) => `['${a}']`
+            //))
             // console.log(path);
-            path = path.join('');
+            path = path.join('.');
             return path;
         }
     </script>

@@ -881,12 +881,20 @@
     byProps: () => byProps,
     byStoreName: () => byStoreName,
     byTypeName: () => byTypeName,
+    find: () => find,
+    findAll: () => findAll,
     findByDisplayName: () => findByDisplayName,
+    findByDisplayNameAll: () => findByDisplayNameAll,
     findByName: () => findByName,
+    findByNameAll: () => findByNameAll,
     findByProps: () => findByProps,
-    findByPropsAll: () => findByPropsAll
+    findByPropsAll: () => findByPropsAll,
+    findByStoreName: () => findByStoreName,
+    findByTypeName: () => findByTypeName,
+    findByTypeNameAll: () => findByTypeNameAll,
+    modules: () => modules
   });
-  var byProps, byName, byDisplayName, byTypeName, byStoreName, byFilePath, byMutableProp, findByProps, findByPropsAll, findByName, findByDisplayName;
+  var byProps, byName, byDisplayName, byTypeName, byStoreName, byFilePath, byMutableProp, originalHandler, blacklist, id, module, key, filterModules, modules, find, findAll, propsFilter, nameFilter, dNameFilter, tNameFilter, storeFilter, findByProps, findByPropsAll, findByName, findByNameAll, findByDisplayName, findByDisplayNameAll, findByTypeName, findByTypeNameAll, findByStoreName;
   var init_filters = __esm({
     "src/metro/filters.ts"() {
       "use strict";
@@ -907,10 +915,70 @@
         ([path, exportDefault]) => `bunny.metro.byFilePath(${path},${exportDefault})`
       );
       byMutableProp = createFilterDefinition(([prop], m) => m?.[prop] && !Object.getOwnPropertyDescriptor(m, prop)?.get, (prop) => `bunny.metro.byMutableProp(${prop})`);
+      originalHandler = window.ErrorUtils.getGlobalHandler();
+      blacklist = (id) => Object.defineProperty(window.modules, id, {
+        value: window.modules[id],
+        enumerable: false,
+        configurable: true,
+        writable: true
+      });
+      for (key in window.modules) {
+        id = Number(key);
+        module = window.modules[id]?.publicModule?.exports;
+        if (!module || module === window || module["proxygone"] === null) {
+          blacklist(id);
+          continue;
+        }
+      }
+      filterModules = (modules2, single = false) => (filter) => {
+        var found = [];
+        for (var key in modules2) {
+          var id = Number(key);
+          var module = modules2[id]?.publicModule?.exports;
+          if (!modules2[id].isInitialized)
+            try {
+              window.ErrorUtils.setGlobalHandler(() => {
+              });
+              __r(id);
+              window.ErrorUtils.setGlobalHandler(originalHandler);
+            } catch (e) {
+            }
+          if (!module) {
+            blacklist(id);
+            continue;
+          }
+          if (module.default && module.__esModule && filter(module.default)) {
+            if (single)
+              return module.default;
+            found.push(module.default);
+          }
+          if (filter(module)) {
+            if (single)
+              return module;
+            else
+              found.push(module);
+          }
+        }
+        if (!single)
+          return found;
+      };
+      modules = window.modules;
+      find = filterModules(modules, true);
+      findAll = filterModules(modules);
+      propsFilter = (props) => (m) => props.every((p) => m[p] !== void 0);
+      nameFilter = (name, defaultExp) => defaultExp ? (m) => m?.name === name : (m) => m?.default?.name === name;
+      dNameFilter = (displayName, defaultExp) => defaultExp ? (m) => m?.displayName === displayName : (m) => m?.default?.displayName === displayName;
+      tNameFilter = (typeName, defaultExp) => defaultExp ? (m) => m?.type?.name === typeName : (m) => m?.default?.type?.name === typeName;
+      storeFilter = (name) => (m) => m.getName && m.getName.length === 0 && m.getName() === name;
       findByProps = (...props) => find(propsFilter(props));
       findByPropsAll = (...props) => findAll(propsFilter(props));
       findByName = (name, defaultExp = true) => find(nameFilter(name, defaultExp));
+      findByNameAll = (name, defaultExp = true) => findAll(nameFilter(name, defaultExp));
       findByDisplayName = (displayName, defaultExp = true) => find(dNameFilter(displayName, defaultExp));
+      findByDisplayNameAll = (displayName, defaultExp = true) => findAll(dNameFilter(displayName, defaultExp));
+      findByTypeName = (typeName, defaultExp = true) => find(tNameFilter(typeName, defaultExp));
+      findByTypeNameAll = (typeName, defaultExp = true) => findAll(tNameFilter(typeName, defaultExp));
+      findByStoreName = (name) => find(storeFilter(name));
     }
   });
 
@@ -1188,7 +1256,7 @@
   });
 
   // src/metro/wrappers.ts
-  var findByProps2, findByPropsLazy, findByPropsAll2, findByName2, findByNameLazy, findByNameAll, findByDisplayName2, findByDisplayNameLazy, findByDisplayNameAll, findByTypeName, findByTypeNameLazy, findByTypeNameAll, findByStoreName, findByStoreNameLazy, findByFilePath, findByFilePathLazy;
+  var findByProps2, findByPropsLazy, findByPropsAll2, findByName2, findByNameLazy, findByNameAll2, findByDisplayName2, findByDisplayNameLazy, findByDisplayNameAll2, findByTypeName2, findByTypeNameLazy, findByTypeNameAll2, findByStoreName2, findByStoreNameLazy, findByFilePath, findByFilePathLazy;
   var init_wrappers = __esm({
     "src/metro/wrappers.ts"() {
       "use strict";
@@ -1202,14 +1270,14 @@
       findByPropsAll2 = (...props) => findAllExports(byProps(...props));
       findByName2 = (name, expDefault = true) => findExports(expDefault ? byName(name) : byName.byRaw(name));
       findByNameLazy = (name, expDefault = true) => createLazyModule(expDefault ? byName(name) : byName.byRaw(name));
-      findByNameAll = (name, expDefault = true) => findAllExports(expDefault ? byName(name) : byName.byRaw(name));
+      findByNameAll2 = (name, expDefault = true) => findAllExports(expDefault ? byName(name) : byName.byRaw(name));
       findByDisplayName2 = (name, expDefault = true) => findExports(expDefault ? byDisplayName(name) : byDisplayName.byRaw(name));
       findByDisplayNameLazy = (name, expDefault = true) => createLazyModule(expDefault ? byDisplayName(name) : byDisplayName.byRaw(name));
-      findByDisplayNameAll = (name, expDefault = true) => findAllExports(expDefault ? byDisplayName(name) : byDisplayName.byRaw(name));
-      findByTypeName = (name, expDefault = true) => findExports(expDefault ? byTypeName(name) : byTypeName.byRaw(name));
+      findByDisplayNameAll2 = (name, expDefault = true) => findAllExports(expDefault ? byDisplayName(name) : byDisplayName.byRaw(name));
+      findByTypeName2 = (name, expDefault = true) => findExports(expDefault ? byTypeName(name) : byTypeName.byRaw(name));
       findByTypeNameLazy = (name, expDefault = true) => createLazyModule(expDefault ? byTypeName(name) : byTypeName.byRaw(name));
-      findByTypeNameAll = (name, expDefault = true) => findAllExports(expDefault ? byTypeName(name) : byTypeName.byRaw(name));
-      findByStoreName = (name) => findExports(byStoreName(name));
+      findByTypeNameAll2 = (name, expDefault = true) => findAllExports(expDefault ? byTypeName(name) : byTypeName.byRaw(name));
+      findByStoreName2 = (name) => findExports(byStoreName(name));
       findByStoreNameLazy = (name) => createLazyModule(byStoreName(name));
       findByFilePath = (path, expDefault = false) => findExports(byFilePath(path, expDefault));
       findByFilePathLazy = (path, expDefault = false) => createLazyModule(byFilePath(path, expDefault));
@@ -2642,7 +2710,7 @@
     if (metroModules[id]?.isInitialized && !metroModules[id]?.hasError) {
       return metroRequire(id);
     }
-    var originalHandler = ErrorUtils.getGlobalHandler();
+    var originalHandler2 = ErrorUtils.getGlobalHandler();
     ErrorUtils.setGlobalHandler(noopHandler);
     var moduleExports;
     try {
@@ -2651,7 +2719,7 @@
       blacklistModule(id);
       moduleExports = void 0;
     }
-    ErrorUtils.setGlobalHandler(originalHandler);
+    ErrorUtils.setGlobalHandler(originalHandler2);
     return moduleExports;
   }
   function* getModules(uniq, all = false) {
@@ -4057,7 +4125,7 @@
       init_logger();
       init_toasts();
       import_react_native8 = __toESM(require_react_native());
-      versionHash = "01cead3-local";
+      versionHash = "880ae34-local";
     }
   });
 
@@ -4363,20 +4431,20 @@
     findAllModule: () => findAllModule,
     findAllModuleId: () => findAllModuleId,
     findByDisplayName: () => findByDisplayName2,
-    findByDisplayNameAll: () => findByDisplayNameAll,
+    findByDisplayNameAll: () => findByDisplayNameAll2,
     findByDisplayNameLazy: () => findByDisplayNameLazy,
     findByFilePath: () => findByFilePath,
     findByFilePathLazy: () => findByFilePathLazy,
     findByName: () => findByName2,
-    findByNameAll: () => findByNameAll,
+    findByNameAll: () => findByNameAll2,
     findByNameLazy: () => findByNameLazy,
     findByProps: () => findByProps2,
     findByPropsAll: () => findByPropsAll2,
     findByPropsLazy: () => findByPropsLazy,
-    findByStoreName: () => findByStoreName,
+    findByStoreName: () => findByStoreName2,
     findByStoreNameLazy: () => findByStoreNameLazy,
-    findByTypeName: () => findByTypeName,
-    findByTypeNameAll: () => findByTypeNameAll,
+    findByTypeName: () => findByTypeName2,
+    findByTypeNameAll: () => findByTypeNameAll2,
     findByTypeNameLazy: () => findByTypeNameLazy,
     findExports: () => findExports,
     findModule: () => findModule,
@@ -7920,7 +7988,7 @@
           },
           render: () => Promise.resolve().then(() => (init_General(), General_exports)),
           rawTabsConfig: {
-            useTrailing: () => `(${"01cead3-local"})`
+            useTrailing: () => `(${"880ae34-local"})`
           }
         },
         {
@@ -8334,12 +8402,12 @@
               }
               return findByName2(name, defaultExp ?? true);
             },
-            findByNameAll: (name, defaultExp = true) => findByNameAll(name, defaultExp),
+            findByNameAll: (name, defaultExp = true) => findByNameAll2(name, defaultExp),
             findByDisplayName: (displayName, defaultExp = true) => findByDisplayName2(displayName, defaultExp),
-            findByDisplayNameAll: (displayName, defaultExp = true) => findByDisplayNameAll(displayName, defaultExp),
-            findByTypeName: (typeName, defaultExp = true) => findByTypeName(typeName, defaultExp),
-            findByTypeNameAll: (typeName, defaultExp = true) => findByTypeNameAll(typeName, defaultExp),
-            findByStoreName: (name) => findByStoreName(name),
+            findByDisplayNameAll: (displayName, defaultExp = true) => findByDisplayNameAll2(displayName, defaultExp),
+            findByTypeName: (typeName, defaultExp = true) => findByTypeName2(typeName, defaultExp),
+            findByTypeNameAll: (typeName, defaultExp = true) => findByTypeNameAll2(typeName, defaultExp),
+            findByStoreName: (name) => findByStoreName2(name),
             common: {
               constants,
               channels,
@@ -9834,7 +9902,7 @@
         alert([
           "Failed to load Bunny!\n",
           `Build Number: ${ClientInfoManager2.Build}`,
-          `Bunny: ${"01cead3-local"}`,
+          `Bunny: ${"880ae34-local"}`,
           stack || e?.toString?.()
         ].join("\n"));
       }

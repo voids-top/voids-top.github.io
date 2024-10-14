@@ -90,7 +90,7 @@
             search(jsonData);
 
             if (results.length > 0) {
-                resultsDiv.innerHTML = `${results.map(path => `data${formatPath(path)}`).join('\n')}`;
+                resultsDiv.innerHTML = `${results.map(path => `data.${formatPath(path)}`).join('\n')}`;
             } else {
                 resultsDiv.innerHTML = '値が見つかりませんでした。';
             }
